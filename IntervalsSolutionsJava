@@ -1,0 +1,160 @@
+    252 Meeting Room 1, easy
+    https://leetcode.com/problems/meeting-rooms/
+
+    public boolean canAttendMeetings(int[][] intervals) {
+        Arrays.sort(intervals, (a, b) -> a[0] - b[0]);
+        for (int i = 0; i < intervals.length - 1; i++) {
+            if (intervals[i][1] > intervals[i + 1][0]) return false;
+        }
+
+        return true;
+    }
+
+    253. Meeting Rooms II, medium
+    https://leetcode.com/problems/meeting-rooms-ii/
+
+        public int minMeetingRooms(int[][] intervals) {
+            int length = intervals.length;
+            int[] start = new int[length];
+            int[] end   = new int[length];
+
+            for (int i = 0; i < intervals.length; i++) {
+                start[i] = intervals[i][0];
+                end[i]   = intervals[i][1];
+            }
+
+            Arrays.sort(start);
+            Arrays.sort(end);
+
+            int minRooms = 0;
+            int e  = 0;
+            for (int s = 0; s < length; s++) {
+                //at time end[e], how many meetings are running/have started at this time
+                //do we need to add a new room?
+                //at time end[e], start[s] meeting has started, but not end
+                if (start[s] < end[e]) minRooms++;
+                else e++;
+            }
+
+            return minRooms;
+        }
+
+   56. Merge Intervals, medium
+    https://leetcode.com/problems/merge-intervals/
+
+    /**
+    find overlap:
+        sort
+        if (prev endtime < current starttime) -> no overlap, push curr to stack
+        else -> merge: min starttime, max endtime, push merged to stack
+    */
+    public int[][] merge(int[][] intervals) {
+        int length = intervals.length;
+        Arrays.sort(intervals, (a, b) -> a[0] - b[0]);
+
+        Deque<int[]> stack = new ArrayDeque<>();
+        stack.push(intervals[0]);
+
+        for (int i = 1; i < length; i++) {
+            int[] prev = stack.peek();
+            int[] curr = intervals[i];
+            if (prev[1] < curr[0]) stack.push(curr); //no overlap
+            else {
+                stack.pop();
+                int[] newInterval = new int[]{Math.min(curr[0], prev[0]),
+                                              Math.max(curr[1], prev[1])};
+                stack.push(newInterval);
+            }
+        }
+
+        return stack.toArray(new int[stack.size()][]);
+    }
+
+    57. Insert Interval, medium
+    https://leetcode.com/problems/insert-interval/
+
+    public int[][] insert(int[][] intervals, int[] newInterval) {
+        int length = intervals.length;
+        if (newInterval == null) return intervals;
+        if (intervals == null || intervals.length < 1) {
+            return new int[][]{{newInterval[0], newInterval[1]}};
+        }
+
+        List<int[]> list = new ArrayList<>();
+
+        for (int[] curr : intervals) {
+            if (curr[1] < newInterval[0]) {
+                list.add(curr);
+            } else if (newInterval[1] < curr[0]) {
+                list.add(newInterval);
+                newInterval = curr; //make newInterval always the larger one need to be inserted
+            } else {
+                newInterval[0] = Math.min(newInterval[0], curr[0]);
+                newInterval[1] = Math.max(newInterval[1], curr[1]);
+            }
+        }
+        list.add(newInterval);
+
+        return list.toArray(new int[list.size()][]);
+    }
+
+    163. Missing Ranges, easy
+    https://leetcode.com/problems/missing-ranges/description/
+
+    public List<List<Integer>> findMissingRanges(int[] nums, int lower, int upper) {
+        List<List<Integer>> res = new ArrayList<>();
+
+        if (lower > upper) return res;
+        if (nums == null || nums.length < 1 || nums[0] < lower || nums[nums.length - 1] > upper) {
+            res.add(List.of(lower, upper));
+            return res;
+        }
+
+        for (int i = 0; i < nums.length; i++) {
+            if (lower > upper) break;
+
+            if (nums[i] < lower) continue;
+            else if (nums[i] == lower) lower++;
+            else { //nums[i] > lower
+                if (nums[i] <= upper) {
+                    res.add(List.of(lower, nums[i] - 1));
+                    lower = nums[i] + 1;
+                } else break;
+            }
+        }
+        if (lower <= upper) res.add(List.of(lower, upper));
+        return res;
+    }
+
+    1094. Car Pooling, medium
+    https://leetcode.com/problems/car-pooling/description/
+
+    public boolean carPooling(int[][] trips, int capacity) {
+        int length = trips.length;
+        int[][] fromStop = new int[length][2];
+        int[][] toStop   = new int[length][2];
+
+        for (int i = 0; i < length; i++) {
+            fromStop[i][0] = trips[i][1];
+            fromStop[i][1] = trips[i][0];
+            toStop[i][0]   = trips[i][2];
+            toStop[i][1]   = trips[i][0];
+        }
+
+        Arrays.sort(fromStop, (a, b) -> a[0] - b[0]);
+        Arrays.sort(toStop, (a, b) -> a[0] - b[0]);
+
+        int pick = 0;
+        int drop = 0;
+        while (pick < length && drop < length) {
+            if (fromStop[pick][0] < toStop[drop][0]) capacity -= fromStop[pick++][1];
+            else if (fromStop[pick][0] > toStop[drop][0]) capacity += toStop[drop++][1];
+            else capacity += toStop[drop++][1] - fromStop[pick++][1];
+
+            if (capacity < 0) return false;
+        }
+
+        return true;
+    }
+
+
